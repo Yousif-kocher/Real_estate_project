@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Estate Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Real Estate Dashboard</h1>
+            <div class="user-info">
+                <img id="userPhoto" src="" alt="User Photo">
+                <span id="userName"></span>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Left Sidebar for Controls -->
+        <div class="controls-sidebar">
+            <div class="block-selection">
+                <h3>Select City Block</h3>
+                <select id="blockSelect">
+                    <option value="">Select a block</option>
+                    <option value="block1">Block 1</option>
+                    <option value="block2">Block 2</option>
+                    <option value="block3">Block 3</option>
+                </select>
+            </div>
+
+            <div class="filters">
+                <h3>Filters</h3>
+                <select id="typeFilter">
+                    <option value="">All Types</option>
+                    <option value="rent">For Rent</option>
+                    <option value="sell">For Sale</option>
+                    <option value="farm">Farms</option>
+                </select>
+                <button onclick="applyFilters()">Apply Filters</button>
+                <button onclick="clearFilters()">Clear Filters</button>
+            </div>
+
+            <div class="openseadragon-controls">
+                <h3>Map Controls</h3>
+                <div class="viewer-buttons">
+                    <button onclick="viewer.viewport.goHome()">Reset View</button>
+                    <button onclick="zoomToMarkers()">Zoom to Markers</button>
+                    <button onclick="toggleMarkers()">Toggle Markers</button>
+                </div>
+            </div>
+
+            <div class="stats">
+                <h3>Quick Stats</h3>
+                <div class="stat-item">
+                    <span>Total Properties:</span>
+                    <strong id="totalProperties">0</strong>
+                </div>
+                <div class="stat-item">
+                    <span>For Rent:</span>
+                    <strong id="rentCount">0</strong>
+                </div>
+                <div class="stat-item">
+                    <span>For Sale:</span>
+                    <strong id="saleCount">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Block Image Section -->
+            <div class="image-section">
+                <div class="image-header">
+                    <h2 id="currentBlockTitle">Select a City Block</h2>
+                    <div class="image-info">
+                        <span>Click on the map to add properties</span>
+                        <span class="zoom-level">Zoom: <span id="zoomLevel">1.0x</span></span>
+                    </div>
+                </div>
+                
+                <div class="viewer-container">
+                    <div id="openseadragon-viewer" style="width: 100%; height: 600px;"></div>
+                    <div class="no-image" id="noImage">
+                        <p>Please select a city block to view the map</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Properties List Section -->
+            <div class="properties-section">
+                <div class="section-header">
+                    <h2>Properties</h2>
+                    <div class="view-controls">
+                        <button id="toggleView" onclick="toggleView()">Grid View</button>
+                    </div>
+                </div>
+                
+                <div class="properties-container" id="propertiesContainer">
+                    <div class="no-properties" id="noProperties">
+                        <p>No properties found. Select a block and add properties by clicking on the map.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Modal -->
+    <div id="propertyModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Property</h2>
+            <form id="propertyForm">
+                <input type="hidden" id="coordinates">
+                
+                <div class="form-group">
+                    <label for="propertyType">Property Type:</label>
+                    <select id="propertyType" required>
+                        <option value="">Select Type</option>
+                        <option value="rent">For Rent</option>
+                        <option value="sell">For Sale</option>
+                        <option value="farm">Farm</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="measures">Measures:</label>
+                        <input type="text" id="measures" placeholder="e.g., 1000 sq ft" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="price">Price ($):</label>
+                        <input type="number" id="price" placeholder="0.00" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bedrooms">Bedrooms:</label>
+                        <input type="number" id="bedrooms" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="bathrooms">Bathrooms:</label>
+                        <input type="number" id="bathrooms" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="kitchens">Kitchens:</label>
+                        <input type="number" id="kitchens" placeholder="0" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" placeholder="Describe the property..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="propertyVideo">Upload Video (optional):</label>
+                    <input type="file" id="propertyVideo" accept="video/*">
+                </div>
+
+                <button type="submit" class="submit-btn">Add Property</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Property Details Modal -->
+    <div id="propertyDetailsModal" class="modal">
+        <div class="modal-content property-details-content">
+            <span class="close">&times;</span>
+            <div id="propertyDetailsContent">
+                <!-- Property details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
